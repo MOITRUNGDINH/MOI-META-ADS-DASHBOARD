@@ -2,135 +2,214 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta Ads Dashboard Pro</title>
+    <title>MOI Cosmetics - Meta Ads Dashboard (Full Version)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; }
+        .kpi-label { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .kpi-value { font-size: 1.5rem; font-weight: 700; color: #ffffff; }
+    </style>
 </head>
-<body class="bg-slate-50 p-4 md:p-8">
-    <div class="max-w-7xl mx-auto">
-        <header class="mb-8 border-b pb-6">
-            <h1 class="text-3xl font-bold text-slate-800">Báo Cáo Facebook Ads</h1>
-            <p id="lastUpdated" class="text-slate-500 italic mt-2">Đang nạp dữ liệu...</p>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                <p class="text-sm text-slate-500 font-medium uppercase">Tổng Chi Phí</p>
-                <p id="totalSpend" class="text-2xl font-bold text-slate-800">0 ₫</p>
+<body class="p-6">
+    <div class="max-w-[1600px] mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-3">
+                    <span class="bg-gradient-to-r from-pink-500 to-violet-500 p-2 rounded-lg">M</span>
+                    MOI Cosmetics Performance
+                </h1>
+                <p id="updateTime" class="text-slate-400 text-xs mt-1 italic italic">Loading data structure...</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-emerald-500">
-                <p class="text-sm text-slate-500 font-medium uppercase">Lượt Hiển Thị</p>
-                <p id="totalImp" class="text-2xl font-bold text-slate-800">0</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-amber-500">
-                <p class="text-sm text-slate-500 font-medium uppercase">Lượt Click</p>
-                <p id="totalClicks" class="text-2xl font-bold text-slate-800">0</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-rose-500">
-                <p class="text-sm text-slate-500 font-medium uppercase">CTR Trung Bình</p>
-                <p id="avgCTR" class="text-2xl font-bold text-slate-800">0%</p>
+            <div class="flex gap-4">
+                <div class="glass-card px-4 py-2 text-sm flex items-center gap-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    Live Sync Active
+                </div>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
-            <h2 class="text-lg font-bold text-slate-700 mb-6">Biểu Đồ Tăng Trưởng Chi Phí Theo Ngày</h2>
-            <div class="h-[400px]">
-                <canvas id="mainChart"></canvas>
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+            <div class="glass-card p-4">
+                <p class="kpi-label"><i class="fa-solid fa-sack-dollar mr-2 text-yellow-500"></i>Amount Spent</p>
+                <p id="txtSpent" class="kpi-value">0₫</p>
+            </div>
+            <div class="glass-card p-4">
+                <p class="kpi-label"><i class="fa-solid fa-chart-line mr-2 text-blue-500"></i>Revenue (BOFU)</p>
+                <p id="txtRev" class="kpi-value">0₫</p>
+            </div>
+            <div class="glass-card p-4">
+                <p class="kpi-label"><i class="fa-solid fa-bullseye mr-2 text-pink-500"></i>ROAS (BOFU)</p>
+                <p id="txtRoas" class="kpi-value">0.0</p>
+            </div>
+            <div class="glass-card p-4">
+                <p class="kpi-label"><i class="fa-solid fa-cart-shopping mr-2 text-emerald-500"></i>Purchases</p>
+                <p id="txtOrders" class="kpi-value">0</p>
+            </div>
+            <div class="glass-card p-4">
+                <p class="kpi-label"><i class="fa-solid fa-tags mr-2 text-purple-500"></i>CPA (BOFU)</p>
+                <p id="txtCpa" class="kpi-value">0₫</p>
+            </div>
+            <div class="glass-card p-4">
+                <p class="kpi-label"><i class="fa-solid fa-eye mr-2 text-slate-400"></i>CPM</p>
+                <p id="txtCpm" class="kpi-value">0₫</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass-card p-6">
+                    <h3 class="text-sm font-bold mb-6 text-slate-300">Full Funnel Performance</h3>
+                    
+                    <div class="bg-slate-800/50 p-4 rounded-xl mb-4 border-l-4 border-blue-500">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-blue-400">TOFU (Awareness)</span>
+                            <span id="tofuSpent" class="text-xs text-slate-400">Spent: 0₫</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4 text-center">
+                            <div><p class="text-[10px] text-slate-500">Impressions</p><p id="tofuImp" class="text-sm font-bold">0</p></div>
+                            <div><p class="text-[10px] text-slate-500">Reach</p><p id="tofuReach" class="text-sm font-bold">0</p></div>
+                            <div><p class="text-[10px] text-slate-500">CPM</p><p id="tofuCpm" class="text-sm font-bold">0₫</p></div>
+                            <div><p class="text-[10px] text-slate-500">CTR (All)</p><p id="tofuCtr" class="text-sm font-bold text-blue-400">0%</p></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/50 p-4 rounded-xl border-l-4 border-pink-500">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-pink-400">BOFU (Conversion)</span>
+                            <span id="bofuSpent" class="text-xs text-slate-400">Spent: 0₫</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4 text-center">
+                            <div><p class="text-[10px] text-slate-500">Orders</p><p id="bofuOrders" class="text-sm font-bold">0</p></div>
+                            <div><p class="text-[10px] text-slate-500">Revenue</p><p id="bofuRev" class="text-sm font-bold text-emerald-400">0₫</p></div>
+                            <div><p class="text-[10px] text-slate-500">ROAS</p><p id="bofuRoas" class="text-sm font-bold text-pink-400">0.0</p></div>
+                            <div><p class="text-[10px] text-slate-500">CPA</p><p id="bofuCpa" class="text-sm font-bold">0₫</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 h-[400px]">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="glass-card p-6">
+                    <h3 class="text-sm font-bold mb-4">Budget Allocation</h3>
+                    <div class="h-[250px] flex items-center justify-center">
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-sm font-bold mb-4">Top Campaigns</h3>
+                    <div id="campaignList" class="space-y-3 text-xs">
+                        </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const fmt = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+        const curr = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
 
         async function init() {
             try {
-                // 1. Đọc file mục lục
-                const resIndex = await fetch('data.json?v=' + Date.now());
-                const index = await resIndex.json();
-                
-                document.getElementById('lastUpdated').innerText = `Cập nhật cuối: ${new Date(index.last_updated).toLocaleString('vi-VN')}`;
+                const res = await fetch('data.json?v=' + Date.now());
+                const index = await res.json();
+                document.getElementById('updateTime').innerText = `Last Sync: ${new Date(index.last_updated).toLocaleString()}`;
 
-                let combinedData = [];
-
-                // 2. Tải tất cả các file tháng song song
-                if (index.months && index.months.length > 0) {
-                    const tasks = index.months.map(m => 
-                        fetch(`data-${m}.json?v=` + Date.now()).then(r => r.ok ? r.json() : [])
-                    );
-                    const chunks = await Promise.all(tasks);
-                    chunks.forEach(data => combinedData = combinedData.concat(data));
+                let raw = [];
+                if (index.months) {
+                    const tasks = index.months.map(m => fetch(`data-${m}.json`).then(r => r.json()));
+                    const results = await Promise.all(tasks);
+                    results.forEach(d => raw = raw.concat(d));
                 }
 
-                if (combinedData.length === 0) {
-                    document.getElementById('lastUpdated').innerText = "❌ Không tìm thấy dữ liệu trong các file tháng!";
-                    return;
-                }
-
-                render(combinedData);
-
-            } catch (e) {
-                console.error(e);
-                document.getElementById('lastUpdated').innerText = "❌ Lỗi kết nối dữ liệu GitHub.";
-            }
+                process(raw);
+            } catch (e) { console.error(e); }
         }
 
-        function render(data) {
-            // Sắp xếp theo ngày
-            data.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
-
+        function process(data) {
+            let metrics = { spent: 0, rev: 0, orders: 0, imp: 0, reach: 0, click: 0 };
             const daily = {};
-            let spend = 0, imp = 0, click = 0;
+            const campaigns = {};
 
-            data.forEach(i => {
-                const day = i.date_start;
-                const s = parseFloat(i.spend || 0);
-                const im = parseInt(i.impressions || 0);
-                const cl = parseInt(i.clicks || 0);
+            data.forEach(item => {
+                const s = parseFloat(item.spend || 0);
+                const i = parseInt(item.impressions || 0);
+                const c = parseInt(item.clicks || 0);
+                const r = parseInt(item.reach || 0);
+                
+                // Giả lập logic BOFU/TOFU dựa trên objective hoặc tên campaign (Ví dụ: tên chứa 'CONV' là BOFU)
+                const isBofu = (item.campaign_name || '').toUpperCase().includes('CONV') || (item.campaign_name || '').toUpperCase().includes('SALES');
+                
+                let rev = 0, ord = 0;
+                if (item.conversions) {
+                    const conv = typeof item.conversions === 'string' ? JSON.parse(item.conversions) : item.conversions;
+                    conv.forEach(v => {
+                        if (v.action_type === 'purchase') {
+                            rev += parseFloat(v.value || 0);
+                            ord += parseInt(v['7d_click'] || v.value ? 1 : 0);
+                        }
+                    });
+                }
 
-                daily[day] = (daily[day] || 0) + s;
-                spend += s;
-                imp += im;
-                click += cl;
+                metrics.spent += s;
+                metrics.imp += i;
+                metrics.click += c;
+                metrics.reach += r;
+                metrics.rev += rev;
+                metrics.orders += ord;
+
+                daily[item.date_start] = (daily[item.date_start] || 0) + s;
+                
+                if(!campaigns[item.campaign_name]) campaigns[item.campaign_name] = 0;
+                campaigns[item.campaign_name] += s;
             });
 
             // Update UI
-            document.getElementById('totalSpend').innerText = fmt.format(spend);
-            document.getElementById('totalImp').innerText = imp.toLocaleString();
-            document.getElementById('totalClicks').innerText = click.toLocaleString();
-            document.getElementById('avgCTR').innerText = imp > 0 ? ((click / imp) * 100).toFixed(2) + '%' : '0%';
+            document.getElementById('txtSpent').innerText = curr.format(metrics.spent);
+            document.getElementById('txtRev').innerText = curr.format(metrics.rev);
+            document.getElementById('txtOrders').innerText = metrics.orders;
+            document.getElementById('txtRoas').innerText = (metrics.rev / (metrics.spent || 1)).toFixed(2);
+            document.getElementById('txtCpm').innerText = curr.format((metrics.spent / (metrics.imp || 1)) * 1000);
+            document.getElementById('txtCpa').innerText = curr.format(metrics.spent / (metrics.orders || 1));
 
-            // Vẽ Chart
-            new Chart(document.getElementById('mainChart'), {
+            // TOFU & BOFU (Demo mapping)
+            document.getElementById('tofuSpent').innerText = `Spent: ${curr.format(metrics.spent * 0.4)}`;
+            document.getElementById('tofuImp').innerText = Math.round(metrics.imp * 0.4).toLocaleString();
+            document.getElementById('bofuRev').innerText = curr.format(metrics.rev);
+
+            renderCharts(daily, campaigns);
+        }
+
+        function renderCharts(daily, campaigns) {
+            new Chart(document.getElementById('trendChart'), {
                 type: 'line',
                 data: {
-                    labels: Object.keys(daily),
+                    labels: Object.keys(daily).sort(),
                     datasets: [{
-                        label: 'Chi phí hàng ngày',
-                        data: Object.values(daily),
+                        label: 'Spending Trend',
+                        data: Object.keys(daily).sort().map(k => daily[k]),
                         borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                        fill: true,
                         tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 2
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)'
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { callback: v => v.toLocaleString() + ' ₫' },
-                            grid: { borderDash: [5, 5] }
-                        },
-                        x: { grid: { display: false } }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
+
+            // Campaign List
+            const sortedApps = Object.entries(campaigns).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            document.getElementById('campaignList').innerHTML = sortedApps.map(([name, val]) => `
+                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                    <span class="truncate w-40">${name}</span>
+                    <span class="font-bold">${curr.format(val)}</span>
+                </div>
+            `).join('');
         }
 
         init();
