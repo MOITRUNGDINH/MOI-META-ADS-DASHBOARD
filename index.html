@@ -3,159 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta Ads Dashboard - Multi-File Edition</title>
+    <title>Meta Ads Dashboard Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .stat-value { font-size: 1.8rem; font-weight: bold; color: #1e40af; }
-    </style>
 </head>
-<body class="bg-gray-50 p-4 md:p-8">
+<body class="bg-slate-50 p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <header class="mb-8 flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800">Báo Cáo Meta Ads</h1>
-                <p id="lastUpdated" class="text-sm text-gray-500 italic">Đang tải dữ liệu...</p>
-            </div>
-            <div id="loadingStatus" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium animate-pulse">
-                Đang nạp dữ liệu từ GitHub...
-            </div>
+        <header class="mb-8 border-b pb-6">
+            <h1 class="text-3xl font-bold text-slate-800">Báo Cáo Facebook Ads</h1>
+            <p id="lastUpdated" class="text-slate-500 italic mt-2">Đang nạp dữ liệu...</p>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="card border-t-4 border-blue-500">
-                <p class="text-gray-500 text-sm">Tổng Chi Phí</p>
-                <p id="totalSpend" class="stat-value">0</p>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <p class="text-sm text-slate-500 font-medium uppercase">Tổng Chi Phí</p>
+                <p id="totalSpend" class="text-2xl font-bold text-slate-800">0 ₫</p>
             </div>
-            <div class="card border-t-4 border-green-500">
-                <p class="text-gray-500 text-sm">Hiển Thị (Imp)</p>
-                <p id="totalImp" class="stat-value">0</p>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-emerald-500">
+                <p class="text-sm text-slate-500 font-medium uppercase">Lượt Hiển Thị</p>
+                <p id="totalImp" class="text-2xl font-bold text-slate-800">0</p>
             </div>
-            <div class="card border-t-4 border-yellow-500">
-                <p class="text-gray-500 text-sm">Số Click</p>
-                <p id="totalClicks" class="stat-value">0</p>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-amber-500">
+                <p class="text-sm text-slate-500 font-medium uppercase">Lượt Click</p>
+                <p id="totalClicks" class="text-2xl font-bold text-slate-800">0</p>
             </div>
-            <div class="card border-t-4 border-purple-500">
-                <p class="text-gray-500 text-sm">CPC Trung Bình</p>
-                <p id="avgCPC" class="stat-value">0</p>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-rose-500">
+                <p class="text-sm text-slate-500 font-medium uppercase">CTR Trung Bình</p>
+                <p id="avgCTR" class="text-2xl font-bold text-slate-800">0%</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-8">
-            <div class="card">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Biểu đồ chi phí theo ngày</h2>
-                <div class="h-[400px]">
-                    <canvas id="mainChart"></canvas>
-                </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
+            <h2 class="text-lg font-bold text-slate-700 mb-6">Biểu Đồ Tăng Trưởng Chi Phí Theo Ngày</h2>
+            <div class="h-[400px]">
+                <canvas id="mainChart"></canvas>
             </div>
         </div>
     </div>
 
     <script>
-        // Cấu hình định dạng tiền tệ
         const fmt = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
-        async function boot() {
+        async function init() {
             try {
-                // 1. Tải file mục lục (data.json)
-                const resp = await fetch('data.json?t=' + Date.now());
-                if (!resp.ok) throw new Error("Không tìm thấy file data.json");
-                const index = await resp.json();
+                // 1. Đọc file mục lục
+                const resIndex = await fetch('data.json?v=' + Date.now());
+                const index = await resIndex.json();
                 
-                document.getElementById('lastUpdated').innerText = `Cập nhật lần cuối: ${new Date(index.last_updated).toLocaleString('vi-VN')}`;
+                document.getElementById('lastUpdated').innerText = `Cập nhật cuối: ${new Date(index.last_updated).toLocaleString('vi-VN')}`;
 
-                let fullData = [];
+                let combinedData = [];
 
-                // 2. Logic gộp file: Nếu có danh sách months, tải từng file data-YYYY-MM.json
+                // 2. Tải tất cả các file tháng song song
                 if (index.months && index.months.length > 0) {
-                    console.log("Phát hiện cấu trúc đa tệp. Đang tải các tháng:", index.months);
-                    
-                    const fetchPromises = index.months.map(month => 
-                        fetch(`data-${month}.json?t=${Date.now()}`).then(r => r.ok ? r.json() : [])
+                    const tasks = index.months.map(m => 
+                        fetch(`data-${m}.json?v=` + Date.now()).then(r => r.ok ? r.json() : [])
                     );
-                    
-                    const results = await Promise.all(fetchPromises);
-                    results.forEach(monthData => {
-                        fullData = fullData.concat(monthData);
-                    });
-                } else {
-                    // Dự phòng cho dữ liệu cũ (file đơn)
-                    fullData = index.ad_daily || [];
+                    const chunks = await Promise.all(tasks);
+                    chunks.forEach(data => combinedData = combinedData.concat(data));
                 }
 
-                if (fullData.length === 0) {
-                    document.getElementById('loadingStatus').innerText = "❌ Không có dữ liệu";
-                    document.getElementById('loadingStatus').className = "px-4 py-2 bg-red-100 text-red-700 rounded-full text-sm";
+                if (combinedData.length === 0) {
+                    document.getElementById('lastUpdated').innerText = "❌ Không tìm thấy dữ liệu trong các file tháng!";
                     return;
                 }
 
-                // 3. Xử lý hiển thị
-                renderDashboard(fullData);
-                document.getElementById('loadingStatus').style.display = 'none';
+                render(combinedData);
 
-            } catch (err) {
-                console.error("Lỗi:", err);
-                document.getElementById('loadingStatus').innerText = "❌ Lỗi tải dữ liệu";
-                document.getElementById('loadingStatus').className = "px-4 py-2 bg-red-100 text-red-700 rounded-full text-sm";
+            } catch (e) {
+                console.error(e);
+                document.getElementById('lastUpdated').innerText = "❌ Lỗi kết nối dữ liệu GitHub.";
             }
         }
 
-        function renderDashboard(data) {
-            // Sắp xếp data theo ngày tăng dần
+        function render(data) {
+            // Sắp xếp theo ngày
             data.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
 
-            // Nhóm dữ liệu theo ngày để vẽ biểu đồ
-            const dailyMap = {};
-            let totalSpend = 0, totalImp = 0, totalClicks = 0;
+            const daily = {};
+            let spend = 0, imp = 0, click = 0;
 
-            data.forEach(item => {
-                const d = item.date_start;
-                const s = parseFloat(item.spend || 0);
-                const i = parseInt(item.impressions || 0);
-                const c = parseInt(item.clicks || 0);
+            data.forEach(i => {
+                const day = i.date_start;
+                const s = parseFloat(i.spend || 0);
+                const im = parseInt(i.impressions || 0);
+                const cl = parseInt(i.clicks || 0);
 
-                if (!dailyMap[d]) dailyMap[d] = 0;
-                dailyMap[d] += s;
-
-                totalSpend += s;
-                totalImp += i;
-                totalClicks += c;
+                daily[day] = (daily[day] || 0) + s;
+                spend += s;
+                imp += im;
+                click += cl;
             });
 
-            // Update KPIs
-            document.getElementById('totalSpend').innerText = fmt.format(totalSpend);
-            document.getElementById('totalImp').innerText = totalImp.toLocaleString();
-            document.getElementById('totalClicks').innerText = totalClicks.toLocaleString();
-            document.getElementById('avgCPC').innerText = totalClicks > 0 ? fmt.format(totalSpend / totalClicks) : '0 ₫';
+            // Update UI
+            document.getElementById('totalSpend').innerText = fmt.format(spend);
+            document.getElementById('totalImp').innerText = imp.toLocaleString();
+            document.getElementById('totalClicks').innerText = click.toLocaleString();
+            document.getElementById('avgCTR').innerText = imp > 0 ? ((click / imp) * 100).toFixed(2) + '%' : '0%';
 
-            // Vẽ biểu đồ
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            new Chart(ctx, {
+            // Vẽ Chart
+            new Chart(document.getElementById('mainChart'), {
                 type: 'line',
                 data: {
-                    labels: Object.keys(dailyMap),
+                    labels: Object.keys(daily),
                     datasets: [{
-                        label: 'Chi phí (VND)',
-                        data: Object.values(dailyMap),
+                        label: 'Chi phí hàng ngày',
+                        data: Object.values(daily),
                         borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
                         fill: true,
-                        tension: 0.3
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() } }
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { callback: v => v.toLocaleString() + ' ₫' },
+                            grid: { borderDash: [5, 5] }
+                        },
+                        x: { grid: { display: false } }
                     }
                 }
             });
         }
 
-        // Khởi động
-        boot();
+        init();
     </script>
 </body>
 </html>
